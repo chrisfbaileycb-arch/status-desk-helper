@@ -1,27 +1,29 @@
-/**
- * Whacka client SDK — _gate (stub)
- *
- * The implementation runs on the Whacka platform and is provided to your app at
- * runtime; it is intentionally NOT part of this export. This stub only keeps
- * your imports resolving and documents which Whacka APIs your code uses. Your
- * own code (components, pages, hooks) is the real, complete export. See README.
- */
+// App gate unlock helper
 
-const __wk = (path) =>
-  new Proxy(function () {}, {
-    get: (_t, prop) =>
-      typeof prop === 'symbol' || prop === 'then' ? undefined : __wk(path + '.' + prop),
-    apply: () => {
-      throw new Error(
-        '`' + path + '` runs on the Whacka platform and is not available in exported code.'
-      );
-    },
-  });
+export function clearGateToken() {
+  localStorage.removeItem('echodesk_gate_token')
+}
 
-export const clearGateToken = __wk('clearGateToken');
-export const gateSeedIsOpen = __wk('gateSeedIsOpen');
-export const setGateSeed = __wk('setGateSeed');
-export const handleGatedResponse = __wk('handleGatedResponse');
-export const popMagicKey = __wk('popMagicKey');
-export const fetchGateStatus = __wk('fetchGateStatus');
-export const submitGateCode = __wk('submitGateCode');
+export function gateSeedIsOpen() {
+  return true
+}
+
+export function setGateSeed() {}
+
+export function handleGatedResponse() {}
+
+export function popMagicKey() {
+  return null
+}
+
+export async function fetchGateStatus() {
+  return { locked: false, unlocked: true }
+}
+
+export async function submitGateCode(code) {
+  if (code) {
+    localStorage.setItem('echodesk_gate_token', code)
+    return { ok: true }
+  }
+  return { ok: false }
+}

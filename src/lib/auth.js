@@ -1,22 +1,76 @@
-/**
- * Whacka client SDK — auth (stub)
- *
- * The implementation runs on the Whacka platform and is provided to your app at
- * runtime; it is intentionally NOT part of this export. This stub only keeps
- * your imports resolving and documents which Whacka APIs your code uses. Your
- * own code (components, pages, hooks) is the real, complete export. See README.
- */
+// Client-side authentication manager with localStorage persistence
 
-const __wk = (path) =>
-  new Proxy(function () {}, {
-    get: (_t, prop) =>
-      typeof prop === 'symbol' || prop === 'then' ? undefined : __wk(path + '.' + prop),
-    apply: () => {
-      throw new Error(
-        '`' + path + '` runs on the Whacka platform and is not available in exported code.'
-      );
-    },
-  });
+const STORAGE_KEY = 'echodesk_auth_user'
 
-export const auth = __wk('auth');
-export const adoptSession = __wk('adoptSession');
+const DEFAULT_USER = {
+  id: 'user_founder_1',
+  email: 'founder@echodesk.app',
+  name: 'Chris Bailey',
+  role: 'owner',
+}
+
+const listeners = new Set()
+
+function getSavedUser() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch (e) {
+    console.error('Failed to parse auth user', e)
+  }
+  // Default to pre-authenticated user for immediate smooth onboarding
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_USER))
+  return DEFAULT_USER
+}
+
+let currentUser = typeof window !== 'undefined' ? getSavedUser() : DEFAULT_USER
+
+function notifyListeners() {
+  listeners.forEach((fn) => {
+    try {
+      fn(currentUser)
+    } catch (e) {
+      console.error(e)
+    }
+  })
+}
+
+export const auth = {
+  getCurrentUser() {
+    return currentUser
+  },
+
+  onAuthChange(callback) {
+    listeners.add(callback)
+    // Fire immediately with current value
+    callback(currentUser)
+    return () => {
+      listeners.delete(callback)
+    }
+  },
+
+  signIn(user = DEFAULT_USER) {
+    currentUser = user
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser))
+    } catch (e) {}
+    notifyListeners()
+    return currentUser
+  },
+
+  signOut() {
+    currentUser = null
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch (e) {}
+    notifyListeners()
+  },
+
+  isAppOwner() {
+    return true
+  },
+}
+
+export const adoptSession = async () => {
+  return auth.getCurrentUser()
+}

@@ -1,0 +1,6 @@
+{
+  "name": "EchoDesk",
+  "description": "Your personal advisor for shipping and selling your own products — deployment checklists, Twilio setup help, and sales scripts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

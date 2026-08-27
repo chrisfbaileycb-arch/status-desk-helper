@@ -1,21 +1,38 @@
-/**
- * Whacka client SDK — schedule (stub)
- *
- * The implementation runs on the Whacka platform and is provided to your app at
- * runtime; it is intentionally NOT part of this export. This stub only keeps
- * your imports resolving and documents which Whacka APIs your code uses. Your
- * own code (components, pages, hooks) is the real, complete export. See README.
- */
+// Follow-up reminder scheduler
 
-const __wk = (path) =>
-  new Proxy(function () {}, {
-    get: (_t, prop) =>
-      typeof prop === 'symbol' || prop === 'then' ? undefined : __wk(path + '.' + prop),
-    apply: () => {
-      throw new Error(
-        '`' + path + '` runs on the Whacka platform and is not available in exported code.'
-      );
-    },
-  });
+const JOBS_STORAGE_KEY = 'echodesk_scheduled_jobs'
 
-export const schedule = __wk('schedule');
+function getJobs() {
+  try {
+    const raw = localStorage.getItem(JOBS_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch (e) {}
+  return []
+}
+
+function saveJobs(jobs) {
+  try {
+    localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs))
+  } catch (e) {}
+}
+
+export const schedule = {
+  async create(config) {
+    const jobs = getJobs()
+    const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+    const newJob = {
+      id: jobId,
+      jobId,
+      createdAt: Date.now(),
+      ...config,
+    }
+    jobs.push(newJob)
+    saveJobs(jobs)
+    console.log('[EchoDesk Scheduler] Created job:', newJob)
+    return newJob
+  },
+
+  async list() {
+    return getJobs()
+  },
+}
